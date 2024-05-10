@@ -1,5 +1,6 @@
 import categoriesRouter from './category/category.router.js'
 import productsRouter from './product/product.router.js'
+import authRouter from './auth/auth.router.js'
 import connectDB from '../../DB/connection.js'
 
 const initApp = (app,express)=>{
@@ -8,6 +9,7 @@ const initApp = (app,express)=>{
     app.get('/',(req,res)=>{
         return res.status(201).json({message:"success"})
      })
+    app.use('/auth',authRouter)
     app.use('/categories',categoriesRouter)
     app.use('/products',productsRouter)
 
