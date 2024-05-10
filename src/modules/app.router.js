@@ -2,6 +2,7 @@ import categoriesRouter from './category/category.router.js'
 import productsRouter from './product/product.router.js'
 import authRouter from './auth/auth.router.js'
 import connectDB from '../../DB/connection.js'
+import 'dotenv/config';
 
 const initApp = (app,express)=>{
     app.use(express.json())
