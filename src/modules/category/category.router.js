@@ -11,6 +11,6 @@ router.post('/',auth(endPoints.create),fileUpload(fileTypes.image).single('image
 router.get('/',auth(endPoints.get),categoriesController.getAll);
 router.get('/active',auth(endPoints.get),categoriesController.getActive);
 router.get('/:id',auth(endPoints.get),categoriesController.getDetails);
-router.patch('/:id',auth(endPoints.create),categoriesController.update);
+router.patch('/:id',auth(endPoints.create),fileUpload(fileTypes.image).single('image'),categoriesController.update);
 router.delete('/:id',auth(endPoints.delete),categoriesController.destroy);
 export default router; 

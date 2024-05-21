@@ -2,6 +2,7 @@ import 'dotenv/config';
 import categoriesRouter from './category/category.router.js'
 import subcategoryRouter from './subcategory/subcategory.router.js'
 import productsRouter from './product/product.router.js'
+import cartRouter from './cart/cart.router.js'
 import authRouter from './auth/auth.router.js'
 import connectDB from '../../DB/connection.js'
 
@@ -15,6 +16,7 @@ const initApp = (app,express)=>{
     app.use('/categories',categoriesRouter)
     app.use('/subcategory',subcategoryRouter)
     app.use('/products',productsRouter)
+    app.use('/cart',cartRouter)
 
     app.use('*',(req,res)=>{
         return res.status(404).json({message:"page noot found"})
