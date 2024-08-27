@@ -3,9 +3,45 @@ import categoryModel from '../../../DB/model/category.model.js'
 import productModel from '../../../DB/model/product.model.js'
 import cloudinary from '../../utlis/cloudinary.js';
 import subcategoryModel from '../../../DB/model/subcategory.model.js';
-export const getAll = async (req,res)=>{
-    const products = await productModel.find({});
-    return res.json({message:"success" , products}) 
+import { pagination } from '../../utlis/pagination.js';
+export const getProducts = async (req,res)=>{
+   const {skip,limit} = pagination(req.query.page,req.query.limit);
+   let queryObj = {...req.query};
+   const execQuery = ['page','limit','sort','fields','search'];
+
+   execQuery.map( (ele)=>{
+    delete queryObj[ele];
+   }); 
+    queryObj = JSON.stringify(queryObj);
+    queryObj = queryObj.replace(/gt|gte|lt|lte|in|nin|eq/g,match => `$${match}`);
+    queryObj = JSON.parse(queryObj);
+    const mongoseQuery = productModel.find(queryObj).skip(skip).limit(limit)
+    // .populate({
+    //     path:'reviews',
+    //     select:'comment',
+    //     populate:{
+    //         path:'userId',
+    //         select:'userName -_id'
+    //     }, 
+    // }); 
+    if(req.query.search){
+      mongoseQuery.find({
+        $or:[
+            {name:{$regex:req.query.search}},
+            {description:{$regex:req.query.search}}
+        ]
+    });
+    }
+    
+    const count = await productModel.estimatedDocumentCount();
+
+    if(req.query.fields){
+        mongoseQuery.select(req.query.fields);
+    }
+  
+
+    const products = await mongoseQuery.sort(req.query.sort).select('name price'); 
+    return res.status(201).json({message:"success",count,products}) 
  }
 
 export const create = async (req,res)=>{
