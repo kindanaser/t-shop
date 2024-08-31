@@ -40,7 +40,16 @@ export const getProducts = async (req,res)=>{
     }
   
 
-    const products = await mongoseQuery.sort(req.query.sort).select('name price'); 
+    let products = await mongoseQuery.sort(req.query.sort); 
+ 
+    products = products.map(product =>{
+        return {
+            ...product.toObject(),
+            image:product.image.secure_url,
+            subImages:product.subImages.map(img=> img.secure_url)
+        }
+    })
+
     return res.status(201).json({message:"success",count,products}) 
  }
 
@@ -59,17 +68,18 @@ export const create = async (req,res)=>{
     req.body.slug = slugify(name);
     req.body.finalPrice = price - ((price * (discount || 0)) / 100 );
 
-    const {secure_url,public_id} = await cloudinary.uploader.upload(req.files.mainImage[0].path,{
+    const {secure_url,public_id} = await cloudinary.uploader.upload(req.files.image[0].path,{
         folder:`${process.env.APPNAME}/product/${name}`});
  
-    req.body.mainImage = {secure_url,public_id}; 
+    req.body.image = {secure_url,public_id}; 
     req.body.subImages = [];
-
-    for(const file of req.files.subImages){
+    if(req.files.subImages){
+      for(const file of req.files.subImages){
         const {secure_url,public_id} = await cloudinary.uploader.upload(file.path,{
             folder:`${process.env.APPNAME}/product/${name}/subImages`});
         req.body.subImages.push({secure_url,public_id});
-    } 
+        } 
+     }
     //  return res.json(req.body)
     const product = await productModel.create(req.body);
     

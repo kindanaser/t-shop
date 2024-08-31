@@ -3,6 +3,10 @@ import cartModel from '../../../DB/model/cart.model.js'
 import productModel from '../../../DB/model/product.model.js';
 import userModel from '../../../DB/model/user.model.js';
 import orderModel from '../../../DB/model/order.model.js';
+import {createInvoice} from "../../utils/pdf.js"; 
+
+// import Stripe from 'stripe';
+// const stripe = new Stripe(process.env.stripe_sk);
 
 export const create = async (req,res)=>{
     const {couponName} = req.body;
@@ -56,6 +60,24 @@ export const create = async (req,res)=>{
     if(!req.body.phone){
        req.body.phone = user.phoneNumber;
     }
+   
+  /*  const session = await stripe.checkout.sessions.create({
+        line_items: [{
+            price_data:{
+                currency:'USD',
+                unit_amount:subTotal - (subTotal * ( (req.body.coupon?.amount || 0)) /100),
+                product_data:{
+                    name:user.userName
+                }
+            },
+            quantity: 1,
+          }],
+        mode: 'payment',
+        success_url: `http://www.facebook.com`,
+        cancel_url: `http://www.youtube.com`,
+      });
+
+      return res.json(session)*/
 
     const order = await orderModel.create({
         userId:req.user._id,
@@ -88,6 +110,20 @@ export const create = async (req,res)=>{
          products:[]
     })
  }
+
+ const invoice = {
+    shipping: {
+      name: user.userName,
+      address: order.address,
+      phoneNumber: order.phoneNumber,
+    },
+    items:order.products,
+    subtotal: order.finalPrice,
+    invoice_nr: order._id
+  };
+  
+  createInvoice(invoice, "invoice.pdf");
+
     return res.status(201).json({message:"success",order});
  }
 

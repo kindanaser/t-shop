@@ -3,17 +3,30 @@ import bcrypt from "bcryptjs"
 import jwt from 'jsonwebtoken';
 import {sendEmail} from '../../utlis/sendEmail.js'
 import {nanoid , customAlphabet} from 'nanoid'
-export const register = async(req,res)=>{
-    const {userName , email , password} = req.body;
-    const user = await userModel.findOne({email});
-    if(user){
-        return res.status(409).json({message:"email already exists !!"});
-    }
-    const hashPassword = bcrypt.hashSync(password,parseInt(process.env.SALTROUND));
+import xlsx from 'xlsx'
 
+export const register = async(req,res)=>{
+    const {userName , email , password } = req.body;
+    const hashPassword = bcrypt.hashSync(password,parseInt(process.env.SALTROUND));
     const createUser = await userModel.create({userName,email,password:hashPassword});
-    await sendEmail(email,"Welcome",`<h2>hello ${userName}</h2>`); 
+    const token = jwt.sign({email},process.env.CONFIRM_EMAILTOKEN)
+    await sendEmail(email,`Welcome`,userName,token); 
     return res.status(201).json({message:"success" , user:createUser});
+}
+
+export const addUserExcel = async(req,res)=>{
+    const workbook = xlsx.readFile(req.file.path);
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    const users = xlsx.utils.sheet_to_json(worksheet);
+    await userModel.insertMany(users);
+    return res.json({message:"success"})
+}
+
+export const confirmEmail = async(req,res)=>{
+   const token = req.params.token;
+   const decoded = jwt.verify(token,process.env.CONFIRM_EMAILTOKEN);
+   await userModel.findOneAndUpdate({email:decoded.email},{confirmEmail:true});
+   return res.status(200).json({message:"success"});
 }
 
 export const login = async(req,res)=>{
