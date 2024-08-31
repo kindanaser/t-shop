@@ -9,7 +9,7 @@ function createInvoice(invoice, path) {
   generateInvoiceTable(doc, invoice);
   generateFooter(doc);
 
-  doc.end();
+  doc.end(); 
   doc.pipe(fs.createWriteStream(path));
 }
 
@@ -77,7 +77,7 @@ function generateInvoiceTable(doc, invoice) {
   );
   generateHr(doc, invoiceTableTop + 20);
   doc.font("Helvetica");
-
+ 
   for (i = 0; i < invoice.items.length; i++) {
     const item = invoice.items[i];
     const position = invoiceTableTop + (i + 1) * 30;
@@ -103,6 +103,7 @@ function generateInvoiceTable(doc, invoice) {
     "",
     formatCurrency(invoice.subtotal * 100)
   );
+}
 
 function generateFooter(doc) {
   doc
@@ -154,4 +155,4 @@ function formatDate(date) {
   return year + "/" + month + "/" + day;
 }
 
-export default createInvoice
+export default createInvoice;

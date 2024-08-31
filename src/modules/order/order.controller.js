@@ -3,10 +3,9 @@ import cartModel from '../../../DB/model/cart.model.js'
 import productModel from '../../../DB/model/product.model.js';
 import userModel from '../../../DB/model/user.model.js';
 import orderModel from '../../../DB/model/order.model.js';
-import {createInvoice} from "../../utils/pdf.js"; 
-
-// import Stripe from 'stripe';
-// const stripe = new Stripe(process.env.stripe_sk);
+import createInvoice from "../../utlis/pdf.js";
+ import Stripe from 'stripe';
+ const stripe = new Stripe(process.env.stripe_sk);
 
 export const create = async (req,res)=>{
     const {couponName} = req.body;
@@ -29,7 +28,7 @@ export const create = async (req,res)=>{
             return res.status(409).json({message:"coupon already used!!"})
         }
         req.body.coupon = coupon;
-    }
+    } 
 
     let finalProductList = [];
     let subTotal = 0;
@@ -89,6 +88,21 @@ export const create = async (req,res)=>{
     });
 
     if(order){
+
+        const invoice = {
+            shipping: {
+              name: user.userName,
+              address: order.address,
+              phoneNumber: order.phoneNumber,
+            },
+            items:order.products,
+            subtotal: order.finalPrice,
+            invoice_nr: order._id
+          };
+           
+          createInvoice(invoice, "invoice.pdf");
+
+
         for(const product of req.body.products){
             await productModel.findOneAndUpdate({_id:product.productId},
                 { 
@@ -110,19 +124,6 @@ export const create = async (req,res)=>{
          products:[]
     })
  }
-
- const invoice = {
-    shipping: {
-      name: user.userName,
-      address: order.address,
-      phoneNumber: order.phoneNumber,
-    },
-    items:order.products,
-    subtotal: order.finalPrice,
-    invoice_nr: order._id
-  };
-  
-  createInvoice(invoice, "invoice.pdf");
 
     return res.status(201).json({message:"success",order});
  }
