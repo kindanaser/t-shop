@@ -31,47 +31,37 @@ import cloudinary from "../../utlis/cloudinary.js";
     return res.status(201).json({message:"success" , subcategory})
  }
 
- export const getActive = async (req,res)=>{
-    const categories = await categoryModel.find({status:"Active"}).select("name")
-    return res.status(201).json({message:"success" , categories})
- }
-
- export const getDetails = async (req,res)=>{
-    const category = await categoryModel.findById(req.params.id);
-    return res.status(201).json({message:"success" , category})
- }
-
  export const update = async (req,res)=>{ 
-    const category = await categoryModel.findById(req.params.id);
-    if(!category){
-        return res.status(404).json({message:"category not found !!"})
+    const subcategory = await subcategoryModel.findById(req.params.id);
+    if(!subcategory){
+        return res.status(404).json({message:"subcategory not found !!"})
     }
      if(req.body.name){
-    category.name = req.body.name.toLowerCase();  
-    }
-    // category.name = req.body.name.toLowerCase();  
-    if(await categoryModel.findOne({name:req.body.name,_id:{$ne:req.params.id}})){
+        subcategory.name = req.body.name.toLowerCase();  
+        subcategory.slug = slugify(req.body.name); 
+    }  
+
+    if(await subcategoryModel.findOne({name:req.body.name,_id:{$ne:req.params.id}})){
         return res.status(409).json({message:"name already exists !!"});
     }
-    category.slug = slugify(req.body.name); 
     if(req.file){
         const {secure_url,public_id} = await cloudinary.uploader.upload(req.file.path,{
             folder:`${process.env.APPNAME}/subcategories`
         });
-        await cloudinary.uploader.destroy(category.image.public_id);
-        category.image = {secure_url , public_id};
+        await cloudinary.uploader.destroy(subcategory.image.public_id);
+        subcategory.image = {secure_url , public_id};
     } 
-    category.status = req.body.status;
-    category.updatedBy = req.user._id;
-    await category.save();
-    return res.status(201).json({message:"success",category})
+    subcategory.status = req.body.status;
+    subcategory.updatedBy = req.user._id;
+    await subcategory.save();
+    return res.status(201).json({message:"success",subcategory})
  } 
 
  export const destroy = async (req,res)=>{
-    const category = await categoryModel.findByIdAndDelete(req.params.id);
-    if(!category){
-        return res.status(404).json({message:"category not found !!"})
+    const subcategory = await subcategoryModel.findByIdAndDelete(req.params.id);
+    if(!subcategory){
+        return res.status(404).json({message:"subcategory not found !!"})
     }
-    await cloudinary.uploader.destroy(category.image.public_id);
+    await cloudinary.uploader.destroy(subcategory.image.public_id);
     return res.status(201).json({message:"success"})
  }
